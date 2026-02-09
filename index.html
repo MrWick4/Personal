@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Be My Valentine 💘</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: black;
+}
+
+.screen {
+  width: 100%;
+  max-width: 420px;
+  height: 100vh;
+  margin: auto;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: background 2s;
+}
+
+h1 {
+  font-size: 32px;
+  padding: 0 20px;
+  transition: opacity 0.4s;
+}
+
+.fade { opacity: 0; }
+
+.tap {
+  font-size: 14px;
+  opacity: 0.8;
+  margin-top: 12px;
+}
+
+.buttons, .sureButtons {
+  margin-top: 30px;
+  display: none;
+}
+
+button {
+  font-size: 20px;
+  padding: 14px 24px;
+  margin: 10px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+#yes { background: white; color: #ff4d6d; }
+#no { background: #222; color: white; }
+#sureYes { background: white; color: #ff4d6d; }
+#sureNo { background: #333; color: white; }
+
+.jealous { animation: shake 0.3s; }
+@keyframes shake {
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+}
+
+/* Hearts */
+.heart {
+  position: absolute;
+  bottom: -20px;
+}
+@keyframes floatUp {
+  from { transform: translateY(0) rotate(0deg); opacity: 1; }
+  to { transform: translateY(-110vh) rotate(360deg); opacity: 0.5; }
+}
+
+/* Confetti */
+.confetti {
+  position: absolute;
+  animation: fall linear forwards;
+}
+@keyframes fall {
+  to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+#final {
+  display: none;
+  font-size: 26px;
+  padding: 20px;
+}
+
+#goBack {
+  display: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: none;
+  margin-top: 15px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="screen" id="screen">
+  <h1 id="question">Hello Tushti 💕</h1>
+  <div class="tap" id="tapHint">Tap anywhere 💖</div>
+
+  <div class="buttons" id="buttons">
+    <button id="yes">YES 💘</button>
+    <button id="no">No 🙈</button>
+  </div>
+
+  <div class="sureButtons" id="sureButtons">
+    <button id="sureYes">Okay okay… YES 💖</button>
+    <button id="sureNo">Yes, I’m sure 💔</button>
+  </div>
+
+  <div id="final"></div>
+  <button id="goBack">Go Back</button>
+</div>
+
+<script>
+const screen = document.getElementById("screen");
+const question = document.getElementById("question");
+const tapHint = document.getElementById("tapHint");
+const buttons = document.getElementById("buttons");
+const sureButtons = document.getElementById("sureButtons");
+const yes = document.getElementById("yes");
+const no = document.getElementById("no");
+const sureYes = document.getElementById("sureYes");
+const sureNo = document.getElementById("sureNo");
+const final = document.getElementById("final");
+const goBack = document.getElementById("goBack");
+
+const NAME = "Tushti";
+
+let stage = -1;
+let musicStarted = false;
+let bgAudio = null;
+
+let yesDodges = 0;
+const MAX_DODGES = 5;
+let yesScale = 1;
+
+const yesTexts = [
+  "Catch me 😳",
+  "Not yet 😏",
+  "Almost there 💕",
+  "So close 👀",
+  "Okay okay YES 💖"
+];
+
+/* Backgrounds */
+const bgGradients = [
+  { g:'linear-gradient(180deg,#1E90FF,#87CEFA)', c:'#1E90FF' },
+  { g:'linear-gradient(180deg,#00BFFF,#ADD8E6)', c:'#00BFFF' },
+  { g:'linear-gradient(180deg,#4682B4,#B0E0E6)', c:'#4682B4' }
+];
+let currentBg = 0;
+screen.style.background = bgGradients[0].g;
+
+/* Screen tap */
+screen.addEventListener("click", () => {
+
+  if (!musicStarted) {
+    bgAudio = new Audio("https://assets.mixkit.co/music/preview/mixkit-romantic-piano-melody-1199.mp3");
+    bgAudio.loop = true;
+    bgAudio.volume = 0.25;
+    bgAudio.play().catch(()=>{});
+    musicStarted = true;
+  }
+
+  if(stage === -1){
+    swapText("I have something to ask you… 😊");
+    stage = -2;
+    return;
+  }
+
+  if(stage === -2){
+    swapText(`Will you be my Valentine, ${NAME}? 💖`);
+    tapHint.style.display = "none";
+    buttons.style.display = "block";
+    stage = 0;
+    return;
+  }
+
+  if(stage === 0.5){
+    stage = 1;
+    swapText("Let's pick a spot for our date 😋");
+    buttons.style.display = "block";
+    yes.innerHTML = "The Secret Kitchen 🍽️";
+    no.innerHTML = "Gurulakshmi 🍛";
+  }
+});
+
+function swapText(text){
+  question.classList.add("fade");
+  setTimeout(()=>{
+    question.innerHTML = text;
+    question.classList.remove("fade");
+  },300);
+}
+
+/* YES dodge */
+yes.addEventListener("mouseenter", () => {
+  if(stage !== 0 || yesDodges >= MAX_DODGES) return;
+
+  yesDodges++;
+  yesScale += 0.1;
+
+  yes.style.transform =
+    `translate(${Math.random()*220-110}px,${Math.random()*140-70}px) scale(${yesScale})`;
+
+  yes.innerText = yesTexts[yesDodges - 1];
+});
+
+/* YES click */
+yes.addEventListener("click", e => {
+  e.stopPropagation();
+
+  if(stage === 0 && yesDodges < MAX_DODGES) return;
+
+  if(stage === 0){
+    stage = 0.5;
+    buttons.style.display = "none";
+    swapText(`Yay! 💖 I’m so happy you said YES, ${NAME}!`);
+  }
+
+  if(stage === 1){
+    showFinal("💖 The Secret Kitchen is a great choice 👏<br>14th Feb • 9:00 PM");
+  }
+});
+
+/* NO click */
+no.addEventListener("click", e => {
+  e.stopPropagation();
+
+  if(stage === 0){
+    buttons.style.display = "none";
+    sureButtons.style.display = "block";
+    swapText(`Are you sure, ${NAME}? 🥺💔`);
+  }
+
+  if(stage === 1){
+    showFinal("💕 Gurulakshmi it is!<br>7:30 PM Dosa date!");
+  }
+});
+
+/* Fake sure buttons */
+sureYes.onclick = () => {
+  sureButtons.style.display = "none";
+  buttons.style.display = "block";
+  swapText("Hehe 😌 I knew it!");
+};
+
+sureNo.onclick = () => {
+  sureButtons.classList.add("jealous");
+  swapText("Hmm… let’s try that again 😏");
+  setTimeout(()=>sureButtons.classList.remove("jealous"),300);
+};
+
+/* Final */
+function showFinal(msg){
+  question.style.display = "none";
+  buttons.style.display = "none";
+  sureButtons.style.display = "none";
+  final.style.display = "block";
+  final.innerHTML = msg;
+  goBack.style.display = "inline-block";
+  confetti();
+}
+
+goBack.onclick = () => location.reload();
+
+/* Confetti */
+function confetti(){
+  for(let i=0;i<80;i++){
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.left = Math.random()*100+"%";
+    c.style.width = c.style.height = Math.random()*8+6+"px";
+    c.style.background = ["#fff","#1E90FF"][Math.floor(Math.random()*2)];
+    c.style.animationDuration = Math.random()*2+2+"s";
+    screen.appendChild(c);
+    setTimeout(()=>c.remove(),4000);
+  }
+}
+
+/* Hearts */
+setInterval(()=>{
+  const h = document.createElement("div");
+  h.className = "heart";
+  h.innerHTML = "💖";
+  h.style.left = Math.random()*100+"%";
+  h.style.fontSize = Math.random()*16+16+"px";
+  h.style.color = bgGradients[currentBg].c;
+  h.style.animation = `floatUp ${Math.random()*2+3}s linear forwards`;
+  screen.appendChild(h);
+  setTimeout(()=>h.remove(),5000);
+},600);
+
+/* Background cycle */
+setInterval(()=>{
+  currentBg = (currentBg+1)%bgGradients.length;
+  screen.style.background = bgGradients[currentBg].g;
+},4000);
+</script>
+
+</body>
+</html>
